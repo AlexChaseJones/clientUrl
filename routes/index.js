@@ -2,7 +2,8 @@ import express from 'express';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { match, RouterContext } from 'react-router';
-import { createStore, applyMiddleware } from 'redux';
+import { compose, createStore, applyMiddleware } from 'redux';
+import { autoRehydrate } from 'redux-persist';
 import thunk from 'redux-thunk';
 import { Provider } from 'react-redux';
 
@@ -12,7 +13,7 @@ import reducers from '../views/src/reducers/index';
 const router = express.Router();
 
 
-router.get('/', (req, res) => {
+router.get('*', (req, res) => {
     // Here we are first matching if the current url exists in the react router routes
   match({ routes, location: req.originalUrl }, (error, redirectLocation, renderProps) => {
     if (error) {
@@ -21,7 +22,14 @@ router.get('/', (req, res) => {
       res.redirect(302, redirectLocation.pathname + redirectLocation.search);
     } else if (renderProps) {
     // Server Rendering... http://redux.js.org/docs/recipes/ServerRendering.html
-      const store = createStore(reducers, {}, applyMiddleware(thunk));
+      const store = createStore(
+        reducers,
+        { user: { loggedIn: false } },
+        compose(
+          applyMiddleware(thunk),
+          autoRehydrate()
+        )
+      );
 
       const html = ReactDOMServer.renderToString(
         <Provider store={store}>
@@ -55,6 +63,13 @@ function renderFullPage(html, initialState) {
     <body>
 
       <div id="reactbody"><div>${html}</div></div>
+      <footer>
+        <div className="row">
+          <div className="columns medium-12">
+            <img alt="Intersection" src="../images/intersectionLogoImage.png" />
+          </div>
+        </div>
+      </footer>
         <script>
             window.__INITIAL_STATE__ = ${JSON.stringify(initialState)}
           </script>

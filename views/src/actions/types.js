@@ -5,3 +5,6 @@ export const CLIENT_DATA_FETCHING = 'client_data_fetching';
 export const SET_CAMPAIGN_DATA = 'set_campaign_data';
 export const CAMPAIGN_DATA_FETCHING = 'campaign_data_fetching';
 export const UPDATE_URL = 'update_url';
+export const USER_LOGIN_FETCHING = 'user_login_fetching';
+export const USER_LOGIN_SUCCESS = 'user_login_success';
+export const USER_LOGIN_FAIL = 'user_login_fail';

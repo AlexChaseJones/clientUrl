@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+import firebase from 'firebase';
 import { BASE_URL, DASHBOARD_BASE_URL } from '../../../config';
 import {
   CLIENT_NAME_CHANGE,
@@ -8,7 +8,9 @@ import {
   SET_CLIENT_DATA,
   SET_CAMPAIGN_DATA,
   CAMPAIGN_DATA_FETCHING,
-  UPDATE_URL
+  UPDATE_URL,
+  USER_LOGIN_SUCCESS,
+  USER_LOGIN_FAIL
 } from './types';
 
 export const clientNameChange = text => ({
@@ -57,4 +59,13 @@ export const generateUrl = (clientId, campaignId) => {
     type: UPDATE_URL,
     payload: url
   });
+};
+
+export const loginWithEmailAndPassword = (email, password) => async dispatch => {
+  try {
+    let { uid } = await firebase.auth().signInWithEmailAndPassword(email, password);
+    dispatch({ type: USER_LOGIN_SUCCESS, payload: uid });
+  } catch (err) {
+    dispatch({ type: USER_LOGIN_FAIL, payload: err });
+  }
 };

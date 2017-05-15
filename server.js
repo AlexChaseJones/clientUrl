@@ -16,9 +16,8 @@ app.use('/stylesheets', express.static('./public/stylesheets'));
 app.use('/js', express.static('./public/js'));
 app.use('/images', express.static('./public/images'));
 
-
-app.use('/', router);
 app.use('/api', apiRouter);
+app.use('/', router);
 
 app.listen(3000, () => {
   console.log('Listening on port 3000');

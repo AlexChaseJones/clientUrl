@@ -3,15 +3,19 @@ import { connect } from 'react-redux';
 import EmailModal from './EmailModal';
 import * as actions from '../actions';
 
-class Form extends Component {
-  state = {
-    generatorReady: false,
-    clientId: '',
-    campaignId: '',
-    showModal: false
+// exporting here as well for jest testing
+export class GenerateUrl extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      generatorReady: false,
+      clientId: '',
+      campaignId: '',
+      showModal: false
+    };
   }
 
-  componentDidMount() {
+  componentWillMount() {
     this.props.getClientData();
   }
 
@@ -69,11 +73,11 @@ class Form extends Component {
   }
 
   generateClientsList() {
-    return this.props.clientData.map(client => {
-      return (
-        <option key={client.id} value={client.name} />
-      );
-    });
+    if (!this.props.clientFetching) {
+      return this.props.clientData.map(client => (
+          <option key={client.id} value={client.name} />
+      ));
+    }
   }
 
   generateCampaignsList() {
@@ -93,22 +97,22 @@ class Form extends Component {
 
   showCampaignList() {
     let placeholder = 'choose a campaign';
-    let disabled = false;
+    let disabled = true;
     if (this.props.noClientMatch) {
       placeholder = 'choose a client first';
-      disabled = true;
     } else if (this.props.campaignFetching) {
       placeholder = 'Loading client campaigns...';
-      disabled = true;
     } else if (this.props.campaignData.length < 1) {
       placeholder = 'There are no campaigns for the choosen client';
-      disabled = true;
+    } else {
+      disabled = false;
     }
 
     return (
         <input
           type="text"
           name='campaign'
+          ref='campaign'
           list="campaigns"
           placeholder={placeholder}
           disabled={disabled}
@@ -118,14 +122,20 @@ class Form extends Component {
       );
   }
 
-  render() {
-    const { clientFetching, clientName, url } = this.props;
-
-    if (clientFetching) {
-      // Render some type of loading indicator. usually only takes a quarter of a second.
-      // return <h1>Please wait while we load the data</h1>
-      return <div />;
+  showEmailModal() {
+    if (this.state.showModal) {
+      return (
+        <EmailModal 
+          closeModal={() => this.setState({ showModal: false })}
+          url={this.props.url}
+        />
+      );
     }
+  }
+
+  render() {
+    const { clientFetching, campaignFetching, clientName, url } = this.props;
+
     return (
       <div>
         <form>
@@ -135,6 +145,9 @@ class Form extends Component {
                 <input 
                   type="text"
                   name='client'
+                  ref='client'
+                  disabled={clientFetching}
+                  placeholder={clientFetching ? 'Fetching clients...' : ''}
                   list={clientName.length > 2 ? 'clients' : ''}
                   value={clientName}
                   onChange={this.clientChange}
@@ -148,10 +161,14 @@ class Form extends Component {
           <div className="row"> 
             <div className="medium-12 columns">
               <label htmlFor='campaign'>
-              Campaign Name {this.props.campaignFetching ? <div className="loader" /> : ''}
+              Campaign Name {campaignFetching ? <div className="loader" /> : ''}
+
                 {this.showCampaignList()}
+
                 <datalist id="campaigns">
+
                   {this.generateCampaignsList()}
+
                 </datalist>
               </label>
             </div>
@@ -169,55 +186,28 @@ class Form extends Component {
                   className="button primary"
                   disabled={!this.state.generatorReady}
                   onClick={e => this.handleGenerateUrl(e)}
-                >
-                Generate URL
-                </button>
+                > Generate URL </button>
                 <button
                   type="button"
                   className="button success"
                   data-toggle="animatedModal10"
                   disabled={!url || !this.state.generatorReady}
                   onClick={() => this.setState({ showModal: true })}
-                >
-                Email Url
-                </button>
+                > Email Url </button>
               </div>
             </div>
           </div>
         </form>
-        {this.state.showModal ?
-          <EmailModal 
-            closeModal={() => this.setState({ showModal: false })}
-            url={url}
-          /> : '' }
+
+        {this.showEmailModal()}
+
       </div>
     );
   }
 }
 
-const mapStateToProps = ({ clientUrl }) => {
-  const { 
-    clientName,
-    campaignName,
-    clientFetching,
-    clientData,
-    campaignFetching,
-    campaignData,
-    generateUrl,
-    url,
-    noClientMatch } = clientUrl;
+const mapStateToProps = ({ clientUrl }) => (
+  clientUrl
+);
 
-  return {
-    clientName,
-    campaignName,
-    clientFetching,
-    clientData,
-    campaignFetching,
-    campaignData,
-    generateUrl,
-    url,
-    noClientMatch 
-  };
-};
-
-export default connect(mapStateToProps, actions)(Form);
+export default connect(mapStateToProps, actions)(GenerateUrl);
